@@ -64,6 +64,16 @@ position(l3d2,33,52).
 position(l3d3,39,52).
 position(storage,45,62).
 
+%Contar
+%list_member_occ([], _, 0).       % list is empty, 0 occurrences
+%list_member_occ([X|Xs], X, N) :- % list has the element at the head
+    list_member_occ(Xs, X, N0),  % count number of elements in the tail
+    succ(N0, N).                 % the number of occurrences is the
+                                 % next natural number
+list_member_occ([Y|Xs], X, N) :-
+    X \= Y,                   % head and the element are different
+    list_member_occ(Xs, X, N).   % occurrences in the tail of the list
+                                 % is the total number
 
 %Matrices
 fila(M, N, Row) :-
@@ -83,8 +93,55 @@ primer_columna([[]|_], [], []).
 primer_columna([[I|Is]|Rs], [I|Col], [Is|Rest]) :-
     primer_columna(Rs, Col, Rest).
 
+%%  add_matrices(+Matrix, +Matrix, ?Matrix) is det
+%
+%   Adds given matrices if their dimensions are equal.
+%   Uses add_vectors/3 to perform addition on each row.
+
+add_matrices([], [], []).
+add_matrices([A|As], [B|Bs], [R|Rs]) :-
+    add_vectors(A, B, R),
+    add_matrices(As, Bs, Rs).
+
+%   add_vectors(+List, +List, ?List) is det
+
+add_vectors([], [], []).
+add_vectors([A|As], [B|Bs], [R|Rs]) :-
+    R is A + B,
+    add_vectors(As, Bs, Rs).
+
+%figuras
+
+triangulo1([[1,_,_],
+	[1,1,_],
+	 [1,1,1],
+	  [1,1,_],
+	   [1,_,_]]).
+
+triangulo2([[2,2,2,2,2],
+	[_,2,2,2,_],
+	 [_,_,2,_,_]]).
+
+zeta3([_,3],
+	[3,3],
+	 [3,_]).
+
+zeta4([_,4,4],
+	[4,4,_]).
+
+ele5([_,_,5],
+	[5,5,5]).
+
+
+
 %matriz([[a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13],[b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,b12,b13],[c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13],[c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13],[d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13]]).
 
 %Probar con Matriz(M),Fila(N,M,Fila).
 
-matriz([[1,a2,a3,a4,2,a6,a7,3,4,4,5,5,5],[1,1,b3,2,2,2,b7,3,3,4,4,b12,5],[c1,1,2,2,2,2,2,3,3,3,c11,c12,c13],[c1,c2,c3,c4,c5,c6,c7,3,3,c10,c11,c12,c13],[d1,d2,d3,d4,d5,d6,d7,3,d9,d10,d11,d12,d13]]).
+%Matriz inicial
+matriz([[_E1,_E2,_E3,_E4,_E5,_E6,_E7,1,_E9,_E10,_E11,_E12,_E13],
+	[_D1,_D2,_D3,_D4,_D5,_D6,_D7,1,1,_D10,_D11,_D12,_D13],
+	 [_C1,3,2,2,2,2,2,1,1,1,_C11,_C12,_C13],
+	  [3,3,_B3,2,2,2,_B7,3,3,4,4,_B12,5],
+	   [3,_A2,_A3,_A4,2,_A6,_A7,1,4,4,5,5,5]]).
+
