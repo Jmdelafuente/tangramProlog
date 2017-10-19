@@ -1,6 +1,6 @@
 :- module(h,_,_).
 :- use_module(library(lists)).
-
+:- use_module(library(system_extra)).
 
 neighbours(o103,[ts,l2d3,o109]).
 neighbours(ts,[mail]).
@@ -64,20 +64,10 @@ position(l3d2,33,52).
 position(l3d3,39,52).
 position(storage,45,62).
 
-%Contar
-%list_member_occ([], _, 0).       % list is empty, 0 occurrences
-%list_member_occ([X|Xs], X, N) :- % list has the element at the head
-    list_member_occ(Xs, X, N0),  % count number of elements in the tail
-    succ(N0, N).                 % the number of occurrences is the
-                                 % next natural number
-list_member_occ([Y|Xs], X, N) :-
-    X \= Y,                   % head and the element are different
-    list_member_occ(Xs, X, N).   % occurrences in the tail of the list
-                                 % is the total number
 
 %Matrices
 fila(M, N, Row) :-
-    nth(M, N, Row).
+    nth(N, M, Row).
 
 columna(M, N, Col) :-
     transp(M, MT),
@@ -93,22 +83,19 @@ primer_columna([[]|_], [], []).
 primer_columna([[I|Is]|Rs], [I|Col], [Is|Rest]) :-
     primer_columna(Rs, Col, Rest).
 
-%%  add_matrices(+Matrix, +Matrix, ?Matrix) is det
-%
-%   Adds given matrices if their dimensions are equal.
-%   Uses add_vectors/3 to perform addition on each row.
 
-add_matrices([], [], []).
-add_matrices([A|As], [B|Bs], [R|Rs]) :-
-    add_vectors(A, B, R),
-    add_matrices(As, Bs, Rs).
+%Recuperar Lista con las N ultimas posiciones
+recortarNLista(L,M,R):-
+	length(L,N2),
+	N is (N2-M),
+	recortarLista(L,N,R).
 
-%   add_vectors(+List, +List, ?List) is det
 
-add_vectors([], [], []).
-add_vectors([A|As], [B|Bs], [R|Rs]) :-
-    R is A + B,
-    add_vectors(As, Bs, Rs).
+%Recortar N lugares a la lista
+recortarLista(L,0,L).
+recortarLista([_H|T],N,R):-
+	N2 is N-1,
+	recortarLista(T,N2,R).
 
 %figuras
 
@@ -123,11 +110,11 @@ triangulo2([[2,2,2,2,2],
 	 [_,_,2,_,_]]).
 
 zeta3([_,3],
-	[3,3],
-	 [3,_]).
+      [3,3],
+      [3,_]).
 
 zeta4([_,4,4],
-	[4,4,_]).
+      [4,4,_]).
 
 ele5([_,_,5],
 	[5,5,5]).
@@ -142,6 +129,59 @@ ele5([_,_,5],
 matriz([[_E1,_E2,_E3,_E4,_E5,_E6,_E7,1,_E9,_E10,_E11,_E12,_E13],
 	[_D1,_D2,_D3,_D4,_D5,_D6,_D7,1,1,_D10,_D11,_D12,_D13],
 	 [_C1,3,2,2,2,2,2,1,1,1,_C11,_C12,_C13],
-	  [3,3,_B3,2,2,2,_B7,3,3,4,4,_B12,5],
+	  [3,3,_B3,2,2,2,_B7,1,1,4,4,_B12,5],
 	   [3,_A2,_A3,_A4,2,_A6,_A7,1,4,4,5,5,5]]).
 
+matrizFinal([[1,2,2,2,2,2],
+	[1,1,2,2,2,3],
+	 [1,1,1,2,3,3],
+	  [1,1,4,4,3,5],
+	   [1,4,4,5,5,5]]).
+
+%Retorna la cantidad de fichas que no estan o estan fuera de lugar entre dos filas.
+fichasDesacomodadasFila(F1,F2,N):-
+	comprobarFilas(F1,F2,R),
+	length(R,N).
+
+%Comprueba el valor de la heuristica contra el goal, devuelve la cantidad de fichas desacomodadas
+comprobar(Matriz,MatrizFinal,Heuristica):-
+	comprobarMatriz(Matriz,MatrizFinal,Resultado),
+	length(Resultado,Heuristica).
+
+%Buscar fichas desacomodadas, devuelve lista con los numeros de fichas fuera de lugar, no la cantidad.
+comprobarMatriz(_M1,[],[]).
+comprobarMatriz([H1|T1],[H2|T2],Resultado):-
+	comprobarFilas(H1,H2,Rt),comprobarMatriz(T1,T2,R),union(R,Rt,Resultado).
+
+%Comprueba fichas fuera de lugar, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
+comprobarFilas(F1,F2,R):-
+	length(F2,N),
+	hacerGround(F1,FR1),
+	recortarNLista(FR1,N,FR),
+	diferentes(F2,FR,Res),
+	sinDuplicados(Res,R).
+
+%Acomodar las listas para poder compararlas
+hacerGround([],[]).
+hacerGround([H1|T1],[0|R]):-
+	var(H1),hacerGround(T1,R).
+hacerGround([H1|T1],[H1|R]):-
+	nonvar(H1),hacerGround(T1,R).
+
+deshacerGround([],[]).
+deshacerGround([0|T1],[_|R]):-
+	deshacerGround(T1,R).
+deshacerGround([H1|T1],[H1|R]):-
+	deshacerGround(T1,R).
+
+%Elimina los elementos duplicados de una lista.
+sinDuplicados([],[]).
+sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
+sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
+
+%Comprueba de forma ordenada si las listas difieren y retorna los elementos de F2 que no están o están fuera de orden en F1.
+diferentes([],[],[]).
+diferentes([H1|T1],[H1|T2],R):-
+	diferentes(T1,T2,R).
+diferentes([_H1|T1],[H2|T2],[H2|R]):-
+	diferentes(T1,T2,R).
