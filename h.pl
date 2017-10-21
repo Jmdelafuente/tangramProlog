@@ -1,4 +1,4 @@
-:- module(h,_,_).
+:- module(hnew,_,_).
 :- use_module(library(lists)).
 :- use_module(library(system_extra)).
 
@@ -22,7 +22,11 @@ neighbours(r123,[]).
 
 
 % is_goal(N) is true if N is a goal node.
-is_goal(r123).
+is_goal([[1,2,2,2,2,2],
+         [1,1,2,2,2,3],
+	 [1,1,1,2,3,3],
+	 [1,1,4,4,3,5],
+	 [1,4,4,5,5,5]]).
 
 % cost(N,M,C) is true if C is the arc cost for the arc from node N to node M
 cost(N,M,C) :-
@@ -65,7 +69,7 @@ position(l3d3,39,52).
 position(storage,45,62).
 
 
-%Matrices
+%Predicados para el uso de Matrices
 fila(M, N, Row) :-
     nth(N, M, Row).
 
@@ -83,6 +87,24 @@ primer_columna([[]|_], [], []).
 primer_columna([[I|Is]|Rs], [I|Col], [Is|Rest]) :-
     primer_columna(Rs, Col, Rest).
 
+quitarColumna([],[],[]).
+quitarColumna([HM|TM],[T|TR],[H|ListaRemovidos]):-
+	HM=[H|T],quitarColumna(TM,TR,ListaRemovidos).
+
+quitarNColumnas(Matriz,Matriz,0).
+quitarNColumnas(Matriz,NuevaMatriz,N):-
+	quitarColumna(Matriz,MatrizA,_L),M is N-1,quitarNColumnas(MatrizA,NuevaMatriz,M).
+
+agregarColumna([],[],[]).
+agregarColumna([[H|T]|TM],[Hr|Tr],[[Hr,H|T]|MatrizR]):-
+	agregarColumna(TM,Tr,MatrizR).
+
+recortarMatriz([],_N,[]).
+recortarMatriz([H|T],N,[NH|MatrizRecortada]):-
+	recortarNLista(H,N,NH),recortarMatriz(T,N,MatrizRecortada).
+
+%Predicados para el uso de filas
+
 
 %Recuperar Lista con las N ultimas posiciones
 recortarNLista(L,M,R):-
@@ -97,47 +119,50 @@ recortarLista([_H|T],N,R):-
 	N2 is N-1,
 	recortarLista(T,N2,R).
 
-%figuras
+%Elimina los elementos duplicados de una lista.
+sinDuplicados([],[]).
+sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
+sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
+
+%Figuras o Tans del Juego
+listaFiguras(Azul,Rosa,Marron,Rojo,Negro):-
+	triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
 
 triangulo1([[1,_,_],
-	[1,1,_],
-	 [1,1,1],
-	  [1,1,_],
-	   [1,_,_]]).
+ 	    [1,1,_],
+	    [1,1,1],
+	    [1,1,_],
+	    [1,_,_]]).
 
 triangulo2([[2,2,2,2,2],
-	[_,2,2,2,_],
-	 [_,_,2,_,_]]).
+	    [_,2,2,2,_],
+	    [_,_,2,_,_]]).
 
-zeta3([_,3],
+zeta3([[_,3],
       [3,3],
-      [3,_]).
+      [3,_]]).
 
-zeta4([_,4,4],
-      [4,4,_]).
+zeta4([[_,4,4],
+      [4,4,_]]).
 
-ele5([_,_,5],
-	[5,5,5]).
+ele5([[_,_,5],
+	[5,5,5]]).
 
-
-
-%matriz([[a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13],[b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,b12,b13],[c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13],[c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13],[d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13]]).
-
-%Probar con Matriz(M),Fila(N,M,Fila).
-
-%Matriz inicial
+%Estado inicial
 matriz([[_E1,_E2,_E3,_E4,_E5,_E6,_E7,1,_E9,_E10,_E11,_E12,_E13],
 	[_D1,_D2,_D3,_D4,_D5,_D6,_D7,1,1,_D10,_D11,_D12,_D13],
-	 [_C1,3,2,2,2,2,2,1,1,1,_C11,_C12,_C13],
-	  [3,3,_B3,2,2,2,_B7,1,1,4,4,_B12,5],
-	   [3,_A2,_A3,_A4,2,_A6,_A7,1,4,4,5,5,5]]).
+	[_C1,3,2,2,2,2,2,1,1,1,_C11,_C12,_C13],
+	[3,3,_B3,2,2,2,_B7,1,1,4,4,_B12,5],
+	[3,_A2,_A3,_A4,2,_A6,_A7,1,4,4,5,5,5]]).
 
-matrizFinal([[1,2,2,2,2,2],
-	[1,1,2,2,2,3],
-	 [1,1,1,2,3,3],
-	  [1,1,4,4,3,5],
-	   [1,4,4,5,5,5]]).
+matrizGround([[0,0,0,0,0,0,0,1,0,0,0,0,0],
+	     [0,0,0,0,0,0,0,1,1,0,0,0,0],
+	     [0,3,2,2,2,2,2,1,1,1,0,0,0],
+	     [3,3,0,2,2,2,0,1,1,4,4,0,5],
+	     [3,0,0,0,2,0,0,1,4,4,5,5,5]]).
 
+
+%Predicados propios del dominio: Manejo de Fichas y recorridos de incersion
 %Retorna la cantidad de fichas que no estan o estan fuera de lugar entre dos filas.
 fichasDesacomodadasFila(F1,F2,N):-
 	comprobarFilas(F1,F2,R),
@@ -156,28 +181,55 @@ comprobarMatriz([H1|T1],[H2|T2],Resultado):-
 %Comprueba fichas fuera de lugar, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
 comprobarFilas(F1,F2,R):-
 	length(F2,N),
-	hacerGround(F1,FR1),
-	recortarNLista(FR1,N,FR),
+	%hacerGround(F1,FR1),
+	recortarNLista(F1,N,FR),
 	diferentes(F2,FR,Res),
 	sinDuplicados(Res,R).
 
-%Acomodar las listas para poder compararlas
-hacerGround([],[]).
-hacerGround([H1|T1],[0|R]):-
-	var(H1),hacerGround(T1,R).
-hacerGround([H1|T1],[H1|R]):-
-	nonvar(H1),hacerGround(T1,R).
+%Predicados de Unificacion para variables anonimas y lugares libres
+%hacerGround([],[]).
+%hacerGround([H1|T1],[H1|R]):-
+%	nonvar(H1),hacerGround(T1,R).
+%hacerGround([H1|T1],[0|R]):-
+%	var(H1),hacerGround(T1,R).
 
-deshacerGround([],[]).
-deshacerGround([0|T1],[_|R]):-
-	deshacerGround(T1,R).
-deshacerGround([H1|T1],[H1|R]):-
-	deshacerGround(T1,R).
 
-%Elimina los elementos duplicados de una lista.
-sinDuplicados([],[]).
-sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
-sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
+%deshacerGround([],[]).
+%deshacerGround([0|T1],[_|R]):-
+%	deshacerGround(T1,R).
+%deshacerGround([H1|T1],[H1|R]):-
+%	deshacerGround(T1,R).
+
+
+mover_ficha(Estado,[HFicha|TFicha],NuevoEstado):-
+	recuperar_numero([HFicha|TFicha],Numero),remover_ficha(Estado,Numero,EstadoIntermedio),length(HFicha,N),quitarNColumnas(EstadoIntermedio,Grilla,N),posicion_valida(Grilla,[HFicha|TFicha],NuevoEstado).
+
+posicion_valida([X|Matriz],Ficha,EstadoNuevo):-X=[0|_T],insertar_ficha([X|Matriz],Ficha,EstadoNuevo).
+posicion_valida([X|Fila],Ficha,[X|EstadoNuevo]):- posicion_valida(Fila,Ficha,EstadoNuevo).
+posicion_valida([X|Fila],Ficha,EstadoNuevo):- X=[_H|_T],quitarColumna([X|Fila],MatrizR,ListaRemovidos),posicion_valida(MatrizR,Ficha,NuevaMatriz),agregarColumna(NuevaMatriz,ListaRemovidos,EstadoNuevo).
+
+
+remover_ficha([],_Ficha,[]).
+remover_ficha([Fila|Tm],Numero,[NFila|EstadoParcial]):-
+	remover_fila(Fila,Numero,NFila),remover_ficha(Tm,Numero,EstadoParcial).
+
+remover_fila([],_Ficha,[]).
+remover_fila([Ficha|T],Ficha,[0|NFila]):-remover_fila(T,Ficha,NFila).
+remover_fila([H|T],Ficha,[H|NFila]):-remover_fila(T,Ficha,NFila).
+
+recuperar_numero([],0).
+recuperar_numero([[HFicha|_T]|_TFicha],HFicha):-nonvar(HFicha).
+recuperar_numero([_HFicha|TFicha],Numero):-recuperar_numero(TFicha,Numero).
+
+insertar_ficha([],[],[]).
+insertar_ficha([],[_Fila1|_Fi],_):- false.
+insertar_ficha([Fila|Mi],[],[Mn|MN]):- insertar_fila(Fila,[],Mn), insertar_ficha(Mi,[],MN).
+insertar_ficha([Fila|Mi],[Fila1|Fi],[Mn|MN]):- insertar_fila(Fila,Fila1,Mn), insertar_ficha(Mi,Fi,MN).
+
+insertar_fila([],[],[]).
+insertar_fila([X|Lista],[],[X|Mn]):- insertar_fila(Lista,[],Mn).
+insertar_fila([0|Lista],[Xf|ListaF],[Xf|Mn]):- insertar_fila(Lista,ListaF,Mn).
+
 
 %Comprueba de forma ordenada si las listas difieren y retorna los elementos de F2 que no están o están fuera de orden en F1.
 diferentes([],[],[]).
@@ -185,3 +237,11 @@ diferentes([H1|T1],[H1|T2],R):-
 	diferentes(T1,T2,R).
 diferentes([_H1|T1],[H2|T2],[H2|R]):-
 	diferentes(T1,T2,R).
+
+
+%PRUEBAS Reducidas
+matrizP([[2,_,_],[_,_,_],[_,_,_],[_,_,_]]).
+
+ficha1([[1,_],[1,_],[1,1]]).
+ficha2([[1,_],[1,_],[1,1],[1,1]]).
+
