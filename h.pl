@@ -1,6 +1,7 @@
 :- module(h,_,_).
 :- use_module(library(lists)).
 :- use_module(library(system_extra)).
+:- use_module(library(hiord_rt)).
 
 neighbours(o103,[ts,l2d3,o109]).
 neighbours(ts,[mail]).
@@ -125,8 +126,8 @@ sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
 
 %Figuras o Tans del Juego para posicion generica
-listaFiguras(Azul,Rosa,Marron,Rojo,Negro):-
-	triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
+listaFiguras(azul,rosa,marron,rojo,negro).
+	%triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
 
 triangulo1([[1],
  	    [1,1],
@@ -149,29 +150,37 @@ ele5([[_,_,5],
           [5,5,5]]).
 
 %insertar figuras para posicion especifica
-insertarAzul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
-	insertarT1(H1,N,1,Hn1),
-	insertarT1(H2,N,2,Hn2),
-	insertarT1(H3,N,3,Hn3),
-	insertarT1(H4,N,2,Hn4),
-	insertarT1(H5,N,1,Hn5).
-	
-insertarT1([H|T],0,0,[H|T]).
-insertarT1([0|T],0,M,[1|Tn]):-
-	M1 is M-1,insertarT1(T,0,M1,Tn).
-insertarT1([H|T],N,M,[H|Tn]):-
-	N1 is N-1,insertarT1(T,N1,M,Tn).
+azul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
+	insertarFicha(H1,N,1,1,Hn1),
+	insertarFicha(H2,N,2,1,Hn2),
+	insertarFicha(H3,N,3,1,Hn3),
+	insertarFicha(H4,N,2,1,Hn4),
+	insertarFicha(H5,N,1,1,Hn5).
 
-%insertarMarron(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
-%	N1 is N+1,insertarMarron(H1,N1,1,Hn1),
-%	insertarMarron(H2,N,2,Hn2),
-%	insertarMarron(H3,N,1,Hn3).
-%no esta terminado:
-%insertarMarron([H|T],0,0,[H|Tn]).
-%insertarMarron([0|T],0,M,[1|Tn]):-
-%	M1 is M-1,insertarAzul(T,0,M1,Tn).
-%insertarAzul([H|T],N,M,[H|Tn]):-
-%	N1 is N-1,insertarAzul(T,N1,M,Tn).
+negro(N,[H1,H2|To],[Hn1,Hn2|To]):-
+	N1 is N+2,insertarFicha(H1,N1,1,5,Hn1),
+	insertarFicha(H2,N,3,5,Hn2).
+
+marron(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
+	N1 is N+1,insertarFicha(H1,N1,1,3,Hn1),
+	insertarFicha(H2,N,2,3,Hn2),
+	insertarFicha(H3,N,1,3,Hn3).
+
+rosa(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
+  insertarFicha(H1,N,5,2,Hn1),
+  N1 is N+1, insertarFicha(H2,N1,3,2,Hn2),
+  N2 is N+2, insertarFicha(H3,N2,1,2,Hn3).
+  
+rojo(N,[H1,H2|To],[Hn1,Hn2|To]):-
+  N1 is N+1, insertarFicha(H1,N1,2,4,Hn1),
+  insertarFicha(H2,N,2,4,Hn2).
+
+insertarFicha([H|T],0,0,_F,[H|T]).
+insertarFicha([0|T],0,M,F,[F|Tn]):-
+	M1 is M-1,insertarFicha(T,0,M1,F,Tn).
+insertarFicha([H|T],N,M,F,[H|Tn]):-
+	N1 is N-1,insertarFicha(T,N1,M,F,Tn).
+
 
  %Estado inicial
 matriz([[_E1,_E2,_E3,_E4,_E5,_E6,_E7,1,_E9,_E10,_E11,_E12,_E13],
@@ -226,12 +235,17 @@ comprobarFilas(F1,F2,R):-
 %	deshacerGround(T1,R).
 
 
-mover_ficha(Estado,[HFicha|TFicha],NuevoEstado):-
-	recuperar_numero([HFicha|TFicha],Numero),remover_ficha(Estado,Numero,EstadoIntermedio),length(HFicha,N),quitarNColumnas(EstadoIntermedio,Grilla,N),posicion_valida(Grilla,[HFicha|TFicha],NuevoEstado).
+%mover_ficha(Estado,[HFicha|TFicha],NuevoEstado):-
+%	recuperar_numero([HFicha|TFicha],Numero),remover_ficha(Estado,Numero,EstadoIntermedio),length(HFicha,N),quitarNColumnas(EstadoIntermedio,Gri%lla,N),posicion_valida(Grilla,[HFicha|TFicha],NuevoEstado).
 
-posicion_valida([X|Matriz],Ficha,EstadoNuevo):-X=[0|_T],insertar_ficha([X|Matriz],Ficha,EstadoNuevo).
-posicion_valida([X|Fila],Ficha,[X|EstadoNuevo]):- posicion_valida(Fila,Ficha,EstadoNuevo).
-posicion_valida([X|Fila],Ficha,EstadoNuevo):- X=[_H|_T],quitarColumna([X|Fila],MatrizR,ListaRemovidos),posicion_valida(MatrizR,Ficha,NuevaMatriz),agregarColumna(NuevaMatriz,ListaRemovidos,EstadoNuevo).
+mover_ficha(Estado,Ficha,NuevoEstado):-
+	recuperar_numero(Ficha,Numero,Long),remover_ficha(Estado,Numero,EstadoIntermedio),quitarNColumnas(EstadoIntermedio,[Hg|Tg],Long),length(Hg,N),Tope is N-7,posicion_valida(N,Tope,[Hg|Tg],Ficha,NuevoEstado).
+
+%Ajuste de eficiencia
+posicion_valida(Tope,Tope,_,_,_):-false.
+posicion_valida(N,Tope,[X|Matriz],Ficha,EstadoNuevo):-X=[0|_T],call(Ficha,[N,[X|Matriz],EstadoNuevo]).
+posicion_valida(N,Tope,[X|Fila],Ficha,[X|EstadoNuevo]):- posicion_valida(N,Tope,Fila,Ficha,EstadoNuevo).
+posicion_valida(N,Tope,[X|Fila],Ficha,EstadoNuevo):- N1 is N-1,posicion_valida(N1,Tope,[X|Fila],Ficha,EstadoNuevo).
 
 
 remover_ficha([],_Ficha,[]).
@@ -242,18 +256,24 @@ remover_fila([],_Ficha,[]).
 remover_fila([Ficha|T],Ficha,[0|NFila]):-remover_fila(T,Ficha,NFila).
 remover_fila([H|T],Ficha,[H|NFila]):-remover_fila(T,Ficha,NFila).
 
-recuperar_numero([],0).
-recuperar_numero([[HFicha|_T]|_TFicha],HFicha):-nonvar(HFicha).
-recuperar_numero([_HFicha|TFicha],Numero):-recuperar_numero(TFicha,Numero).
+recuperar_numero(azul,1,3).
+recuperar_numero(rosa,2,5).
+recuperar_numero(marron,3,2).
+recuperar_numero(rojo,4,3).
+recuperar_numero(negro,5,3).
 
-insertar_ficha([],[],[]).
-insertar_ficha([],[_Fila1|_Fi],_):- false.
-insertar_ficha([Fila|Mi],[],[Mn|MN]):- insertar_fila(Fila,[],Mn), insertar_ficha(Mi,[],MN).
-insertar_ficha([Fila|Mi],[Fila1|Fi],[Mn|MN]):- insertar_fila(Fila,Fila1,Mn), insertar_ficha(Mi,Fi,MN).
+%recuperar_numero([],0).
+%recuperar_numero([[HFicha|_T]|_TFicha],HFicha):-nonvar(HFicha).
+%recuperar_numero([_HFicha|TFicha],Numero):-recuperar_numero(TFicha,Numero).
 
-insertar_fila([],[],[]).
-insertar_fila([X|Lista],[],[X|Mn]):- insertar_fila(Lista,[],Mn).
-insertar_fila([0|Lista],[Xf|ListaF],[Xf|Mn]):- insertar_fila(Lista,ListaF,Mn).
+%insertar_ficha([],[],[]).
+%insertar_ficha([],[_Fila1|_Fi],_):- false.
+%insertar_ficha([Fila|Mi],[],[Mn|MN]):- insertar_fila(Fila,[],Mn), insertar_ficha(Mi,[],MN).
+%insertar_ficha([Fila|Mi],[Fila1|Fi],[Mn|MN]):- insertar_fila(Fila,Fila1,Mn), insertar_ficha(Mi,Fi,MN).
+
+%insertar_fila([],[],[]).
+%insertar_fila([X|Lista],[],[X|Mn]):- insertar_fila(Lista,[],Mn).
+%insertar_fila([0|Lista],[Xf|ListaF],[Xf|Mn]):- insertar_fila(Lista,ListaF,Mn).
 
 
 %Comprueba de forma ordenada si las listas difieren y retorna los elementos de F2 que no están o están fuera de orden en F1.
