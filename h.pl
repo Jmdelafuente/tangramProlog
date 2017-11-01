@@ -1,4 +1,4 @@
-:- module(hnew,_,_).
+:- module(h,_,_).
 :- use_module(library(lists)).
 :- use_module(library(system_extra)).
 
@@ -124,31 +124,56 @@ sinDuplicados([],[]).
 sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
 
-%Figuras o Tans del Juego
+%Figuras o Tans del Juego para posicion generica
 listaFiguras(Azul,Rosa,Marron,Rojo,Negro):-
 	triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
 
-triangulo1([[1,_,_],
- 	    [1,1,_],
+triangulo1([[1],
+ 	    [1,1],
 	    [1,1,1],
-	    [1,1,_],
-	    [1,_,_]]).
+	    [1,1],
+	    [1]]).
 
 triangulo2([[2,2,2,2,2],
-	    [_,2,2,2,_],
-	    [_,_,2,_,_]]).
+	    [_,2,2,2],
+	    [_,_,2]]).
 
 zeta3([[_,3],
-      [3,3],
-      [3,_]]).
+       [3,3],
+       [3]]).
 
 zeta4([[_,4,4],
-      [4,4,_]]).
+       [4,4]]).
 
 ele5([[_,_,5],
-	[5,5,5]]).
+          [5,5,5]]).
 
-%Estado inicial
+%insertar figuras para posicion especifica
+insertarAzul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
+	insertarT1(H1,N,1,Hn1),
+	insertarT1(H2,N,2,Hn2),
+	insertarT1(H3,N,3,Hn3),
+	insertarT1(H4,N,2,Hn4),
+	insertarT1(H5,N,1,Hn5).
+	
+insertarT1([H|T],0,0,[H|T]).
+insertarT1([0|T],0,M,[1|Tn]):-
+	M1 is M-1,insertarT1(T,0,M1,Tn).
+insertarT1([H|T],N,M,[H|Tn]):-
+	N1 is N-1,insertarT1(T,N1,M,Tn).
+
+%insertarMarron(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
+%	N1 is N+1,insertarMarron(H1,N1,1,Hn1),
+%	insertarMarron(H2,N,2,Hn2),
+%	insertarMarron(H3,N,1,Hn3).
+%no esta terminado:
+%insertarMarron([H|T],0,0,[H|Tn]).
+%insertarMarron([0|T],0,M,[1|Tn]):-
+%	M1 is M-1,insertarAzul(T,0,M1,Tn).
+%insertarAzul([H|T],N,M,[H|Tn]):-
+%	N1 is N-1,insertarAzul(T,N1,M,Tn).
+
+ %Estado inicial
 matriz([[_E1,_E2,_E3,_E4,_E5,_E6,_E7,1,_E9,_E10,_E11,_E12,_E13],
 	[_D1,_D2,_D3,_D4,_D5,_D6,_D7,1,1,_D10,_D11,_D12,_D13],
 	[_C1,3,2,2,2,2,2,1,1,1,_C11,_C12,_C13],
@@ -245,3 +270,4 @@ matrizP([[2,_,_],[_,_,_],[_,_,_],[_,_,_]]).
 ficha1([[1,_],[1,_],[1,1]]).
 ficha2([[1,_],[1,_],[1,1],[1,1]]).
 
+matriz6([[2,0,0,0,0,0],[2,2,0,0,0,0],[2,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]]).
