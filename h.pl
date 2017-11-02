@@ -1,7 +1,7 @@
 :- module(h,_,_).
 :- use_module(library(lists)).
 :- use_module(library(system_extra)).
-:- use_module(library(hiord_rt)).
+:- use_package(hiord).
 
 neighbours(o103,[ts,l2d3,o109]).
 neighbours(ts,[mail]).
@@ -175,11 +175,14 @@ rojo(N,[H1,H2|To],[Hn1,Hn2|To]):-
   N1 is N+1, insertarFicha(H1,N1,2,4,Hn1),
   insertarFicha(H2,N,2,4,Hn2).
 
+%insertarFicha(_,-1,_,_,_):-!.
+insertarFicha([],0,0,_F,[]).
 insertarFicha([H|T],0,0,_F,[H|T]).
 insertarFicha([0|T],0,M,F,[F|Tn]):-
 	M1 is M-1,insertarFicha(T,0,M1,F,Tn).
+insertarFicha([],_,_,_,_):-false.
 insertarFicha([H|T],N,M,F,[H|Tn]):-
-	N1 is N-1,insertarFicha(T,N1,M,F,Tn).
+	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
 
 
  %Estado inicial
@@ -239,13 +242,18 @@ comprobarFilas(F1,F2,R):-
 %	recuperar_numero([HFicha|TFicha],Numero),remover_ficha(Estado,Numero,EstadoIntermedio),length(HFicha,N),quitarNColumnas(EstadoIntermedio,Gri%lla,N),posicion_valida(Grilla,[HFicha|TFicha],NuevoEstado).
 
 mover_ficha(Estado,Ficha,NuevoEstado):-
-	recuperar_numero(Ficha,Numero,Long),remover_ficha(Estado,Numero,EstadoIntermedio),quitarNColumnas(EstadoIntermedio,[Hg|Tg],Long),length(Hg,N),Tope is N-7,posicion_valida(N,Tope,[Hg|Tg],Ficha,NuevoEstado).
+	recuperar_numero(Ficha,Numero,Long),remover_ficha(Estado,Numero,EstadoIntermedio),quitarNColumnas(EstadoIntermedio,[Hg|Tg],Long),length(Hg,Tope),N is Tope-6,posicion_valida(N,Tope,[Hg|Tg],Ficha,NuevoEstado).
 
 %Ajuste de eficiencia
-posicion_valida(Tope,Tope,_,_,_):-false.
-posicion_valida(N,Tope,[X|Matriz],Ficha,EstadoNuevo):-X=[0|_T],call(Ficha,[N,[X|Matriz],EstadoNuevo]).
+posicion_valida(Tope,Tope,[],_,[]):-false.
+posicion_valida(N,_Tope,[[0|T]|Matriz],Ficha,EstadoNuevo):-call(Ficha,N,[[0|T]|Matriz],EstadoNuevo).
+posicion_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- columna_valida(N,Tope,Matriz,Ficha,EstadoNuevo).
+%posicion_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- N1 is N+1,Tope>=N1,posicion_valida(N1,Tope,Matriz,Ficha,EstadoNuevo).
 posicion_valida(N,Tope,[X|Fila],Ficha,[X|EstadoNuevo]):- posicion_valida(N,Tope,Fila,Ficha,EstadoNuevo).
-posicion_valida(N,Tope,[X|Fila],Ficha,EstadoNuevo):- N1 is N-1,posicion_valida(N1,Tope,[X|Fila],Ficha,EstadoNuevo).
+
+columna_valida(Tope,Tope,_,_,_):-false.
+columna_valida(N,_Tope,[[0|T]|Matriz],Ficha,EstadoNuevo):- call(Ficha,N,[[0|T]|Matriz],EstadoNuevo).
+columna_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- N1 is N+1,Tope>=N1,columna_valida(N1,Tope,Matriz,Ficha,EstadoNuevo).
 
 
 remover_ficha([],_Ficha,[]).
