@@ -2,26 +2,52 @@
 :- use_module(library(lists)).
 :- use_module(library(system_extra)).
 :- use_package(hiord).
+%:- use_module(library(random)).
 
-neighbours(o103,[ts,l2d3,o109]).
-neighbours(ts,[mail]).
-neighbours(mail,[]).
-neighbours(o109,[o111,o119]).
-neighbours(o111,[]).
-neighbours(o119,[storage,o123]).
-neighbours(storage,[]).
-neighbours(o123,[r123,o125]).
-neighbours(o125,[]).
-neighbours(l2d1,[l3d2,l2d2]).
-neighbours(l2d2,[l2d4]).
-neighbours(l2d3,[l2d1,l2d4]).
-neighbours(l2d4,[o109]).
-neighbours(l3d2,[l3d3,l3d1]).
-neighbours(l3d1,[l3d3]).
-neighbours(l3d3,[]).
-neighbours(r123,[]).
+%neighbours(o103,[ts,l2d3,o109]).
+%neighbours(ts,[mail]).
+%neighbours(mail,[]).
+%neighbours(o109,[o111,o119]).
+%neighbours(o111,[]).
+%neighbours(o119,[storage,o123]).
+%neighbours(storage,[]).
+%neighbours(o123,[r123,o125]).
+%neighbours(o125,[]).
+%neighbours(l2d1,[l3d2,l2d2]).
+%neighbours(l2d2,[l2d4]).
+%neighbours(l2d3,[l2d1,l2d4]).
+%neighbours(l2d4,[o109]).
+%neighbours(l3d2,[l3d3,l3d1]).
+%neighbours(l3d1,[l3d3]).
+%neighbours(l3d3,[]).
+%neighbours(r123,[]).
+
+neighbours(Estado,NuevoEstado):-
+	is_goal(F),comprobarMatriz(Estado,F,[NroFicha|_T]),recuperar_numero(Ficha,NroFicha,_),display(Ficha),mover_ficha(Estado,Ficha,NuevoEstado).
+
+%elegir una ficha de las faltantes para colocar
+%chooseOne([], []).
+%chooseOne(Lista, Ficha) :-
+%        length(Lista, Length),
+%        random(0, Length, Index),
+%        nth(Index, Lista, Ficha).
+
+%nodos
+%nodo(N,_,_,_).
+nodo(Matriz,[],0,C):-
+	matriz(Matriz),
+	h(Matriz,C).
+
+%nodo(Estado,P,1,C):-
+%	mover_ficha(M,P,R),
+%	h(R,C).
 
 
+%nodo(N,[P|N],PC,C):-
+%	moverFicha(N,,R),
+	
+%nodo([H|T],P,PC,C):-
+	
 % is_goal(N) is true if N is a goal node.
 is_goal([[1,2,2,2,2,2],
          [1,1,2,2,2,3],
@@ -33,42 +59,13 @@ is_goal([[1,2,2,2,2,2],
 cost(N,M,C) :-
    neighbours(N,NN),
    member(M,NN),
-   position(N,NX,NY),
-   position(M,MX,MY),
-   C is abs(NX-MX)+abs(NY-MY).
-
-% N.B. the cost database in the book is obtained by the instances of the query
-% ? cost(A,B,C).
+   C is 1.
 
 % h(N,C) is true if C is the heuristic cost of node N
 %  This assumes that there is only one goal node.
 h(N,C) :-
-   position(N,NX,NY),
    is_goal(G),
-   position(G,GX,GY),
-   C is abs(NX-GX)+abs(NY-GY).
-
-
-% position(N,X,Y) is true if node X is at position (X,Y)
-
-position(mail,17,43).
-position(ts,23,43).
-position(o103,31,43).
-position(o109,43,43).
-position(o111,47,43).
-position(o119,42,58).
-position(o123,33,58).
-position(o125,29,58).
-position(r123,33,62).
-position(l2d1,33,49).
-position(l2d2,39,49).
-position(l2d3,32,46).
-position(l2d4,39,46).
-position(l3d1,34,55).
-position(l3d2,33,52).
-position(l3d3,39,52).
-position(storage,45,62).
-
+   comprobar(N,G,C).
 
 %Predicados para el uso de Matrices
 fila(M, N, Row) :-
@@ -122,32 +119,33 @@ recortarLista([_H|T],N,R):-
 
 %Elimina los elementos duplicados de una lista.
 sinDuplicados([],[]).
+sinDuplicados([0|Xs],Ys):- sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
 
 %Figuras o Tans del Juego para posicion generica
-listaFiguras(azul,rosa,marron,rojo,negro).
-	%triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
+% listaFiguras(azul,rosa,marron,rojo,negro).
+% 	%triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
 
-triangulo1([[1],
- 	    [1,1],
-	    [1,1,1],
-	    [1,1],
-	    [1]]).
+% triangulo1([[1],
+%  	    [1,1],
+% 	    [1,1,1],
+% 	    [1,1],
+% 	    [1]]).
 
-triangulo2([[2,2,2,2,2],
-	    [_,2,2,2],
-	    [_,_,2]]).
+% triangulo2([[2,2,2,2,2],
+% 	    [_,2,2,2],
+% 	    [_,_,2]]).
 
-zeta3([[_,3],
-       [3,3],
-       [3]]).
+% zeta3([[_,3],
+%        [3,3],
+%        [3]]).
 
-zeta4([[_,4,4],
-       [4,4]]).
+% zeta4([[_,4,4],
+%        [4,4]]).
 
-ele5([[_,_,5],
-          [5,5,5]]).
+% ele5([[_,_,5],
+%           [5,5,5]]).
 
 %insertar figuras para posicion especifica
 azul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
@@ -184,7 +182,6 @@ insertarFicha([],_,_,_,_):-false.
 insertarFicha([H|T],N,M,F,[H|Tn]):-
 	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
 
-
  %Estado inicial
 
 matriz([[0,0,0,0,0,0,0,1,0,0,0,0,0],
@@ -215,14 +212,14 @@ comprobar(Matriz,MatrizFinal,Heuristica):-
 %Buscar fichas desacomodadas, devuelve lista con los numeros de fichas fuera de lugar, no la cantidad.
 comprobarMatriz(_M1,[],[]).
 comprobarMatriz([H1|T1],[H2|T2],Resultado):-
-	comprobarFilas(H1,H2,Rt),comprobarMatriz(T1,T2,R),union(R,Rt,Resultado).
+	comprobarFilas(H1,H2,Rt),comprobarMatriz(T1,T2,R),union(Rt,R,Resultado).
 
 %Comprueba fichas fuera de lugar, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
 comprobarFilas(F1,F2,R):-
 	length(F2,N),
 	%hacerGround(F1,FR1),
 	recortarNLista(F1,N,FR),
-	diferentes(F2,FR,Res),
+	diferentes(FR,F2,Res),
 	sinDuplicados(Res,R).
 
 %Predicados de Unificacion para variables anonimas y lugares libres
