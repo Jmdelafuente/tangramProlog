@@ -3,7 +3,12 @@
 :- use_module(library(system_extra)).
 :- use_package(hiord).
 :- use_module(library(idlists)).
+:- use_module(library(aggregates)).
 %:- use_module(library(random)).
+
+%--------------------------------------------------------------------------------
+%Predicados de Planificacion para asearch1
+%--------------------------------------------------------------------------------
 
 %Calcula todos los posibles estados desde Estado para colocar las piezas faltantes
 neighbours(Estado,NuevosEstados):-
@@ -15,6 +20,7 @@ is_goal([[1,2,2,2,2,2],
 	 [1,1,1,2,3,3],
 	 [1,1,4,4,3,5],
 	 [1,4,4,5,5,5]]).
+
 
 % cost(N,M,C) is true if C is the arc cost for the arc from node N to node M
 cost(N,M,C) :-
@@ -28,112 +34,10 @@ h(N,C) :-
    is_goal(G),
    comprobar(N,G,C).
 
-%Predicados para el uso de Matrices
-fila(M, N, Row) :-
-    nth(N, M, Row).
-
-columna(M, N, Col) :-
-    transp(M, MT),
-    fila(MT, N, Col).
-
-transp([[]|_], []).
-transp([[I|Is]|Rs], [Col|MT]) :-
-    primer_columna([[I|Is]|Rs], Col, [Is|NRs]),
-    transp([Is|NRs], MT).
-
-primer_columna([], [], []).
-primer_columna([[]|_], [], []).
-primer_columna([[I|Is]|Rs], [I|Col], [Is|Rest]) :-
-    primer_columna(Rs, Col, Rest).
-
-quitarColumna([],[],[]).
-quitarColumna([HM|TM],[T|TR],[H|ListaRemovidos]):-
-	HM=[H|T],quitarColumna(TM,TR,ListaRemovidos).
-
-quitarNColumnas(Matriz,Matriz,0).
-quitarNColumnas(Matriz,NuevaMatriz,N):-
-	quitarColumna(Matriz,MatrizA,_L),M is N-1,quitarNColumnas(MatrizA,NuevaMatriz,M).
-
-agregarColumna([],[],[]).
-agregarColumna([[H|T]|TM],[Hr|Tr],[[Hr,H|T]|MatrizR]):-
-	agregarColumna(TM,Tr,MatrizR).
-
-recortarMatriz([],_N,[]).
-recortarMatriz([H|T],N,[NH|MatrizRecortada]):-
-	recortarNLista(H,N,NH),recortarMatriz(T,N,MatrizRecortada).
-
-%Predicados para el uso de filas
+%Correccion sintactica.
+init(M):-matriz(M).
 
 
-%Recuperar Lista con las N ultimas posiciones
-recortarNLista(L,M,R):-
-	length(L,N2),
-	N is (N2-M),
-	recortarLista(L,N,R).
-
-
-%Recortar N lugares a la lista
-recortarLista(L,0,L).
-recortarLista([_H|T],N,R):-
-	N2 is N-1,
-	recortarLista(T,N2,R).
-
-%Elimina los elementos duplicados de una lista.
-sinDuplicados([],[]).
-sinDuplicados([0|Xs],Ys):- sinDuplicados(Xs,Ys).
-sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
-sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
-
-
-%insertar figuras para posicion especifica
-azul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
-	insertarFicha(H1,N,1,1,Hn1),
-	insertarFicha(H2,N,2,1,Hn2),
-	insertarFicha(H3,N,3,1,Hn3),
-	insertarFicha(H4,N,2,1,Hn4),
-	insertarFicha(H5,N,1,1,Hn5).
-
-negro(N,[H1,H2|To],[Hn1,Hn2|To]):-
-	N1 is N+2,insertarFicha(H1,N1,1,5,Hn1),
-	insertarFicha(H2,N,3,5,Hn2).
-
-marron(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
-	N1 is N+1,insertarFicha(H1,N1,1,3,Hn1),
-	insertarFicha(H2,N,2,3,Hn2),
-	insertarFicha(H3,N,1,3,Hn3).
-
-rosa(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
-  insertarFicha(H1,N,5,2,Hn1),
-  N1 is N+1, insertarFicha(H2,N1,3,2,Hn2),
-  N2 is N+2, insertarFicha(H3,N2,1,2,Hn3).
-  
-rojo(N,[H1,H2|To],[Hn1,Hn2|To]):-
-  N1 is N+1, insertarFicha(H1,N1,2,4,Hn1),
-  insertarFicha(H2,N,2,4,Hn2).
-
-insertarFicha([],0,0,_F,[]).
-insertarFicha([H|T],0,0,_F,[H|T]).
-insertarFicha([0|T],0,M,F,[F|Tn]):-
-	M1 is M-1,insertarFicha(T,0,M1,F,Tn).
-insertarFicha([],_,_,_,_):-false.
-insertarFicha([H|T],N,M,F,[H|Tn]):-
-	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
-
-%Estado inicial
-
-matriz([[0,0,0,0,0,0,0,1,0,0,0,0,0],
-	[0,0,0,0,0,0,0,1,1,0,0,0,0],
-	[0,3,2,2,2,2,2,1,1,1,0,0,0],
-	[3,3,0,2,2,2,0,1,1,4,4,0,5],
-	[3,0,0,0,2,0,0,1,4,4,5,5,5]]).
-
-
-
-matrizGround([[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
-	      [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
-	      [0,3,2,2,2,2,2,1,1,1,0,0,0,0,0,0],
-	      [3,3,0,2,2,2,0,1,1,0,0,0,4,4,0,5],
-	      [3,0,0,0,2,0,0,1,0,0,0,4,4,5,5,5]]).
 
 %--------------------------------------------------------------------------------
 %Predicados propios del dominio: Manejo de Fichas y recorridos de incersion
@@ -165,8 +69,8 @@ comprobarFilas(F1,F2,R):-
 
 %Dado un estado Estado y una lista Fichas, genera un listado de NuevosEstados con todas las Fichas insertadas 
 mover_fichas(_,[],[]).
-mover_fichas(Estado,[H|T],[He|Te]):-
-	recuperar_numero(Ficha,H,_),mover_ficha(Estado,Ficha,He),mover_fichas(Estado,T,Te).
+mover_fichas(Estado,[H|T],Resultado):-
+	recuperar_numero(Ficha,H,_),findall(Lista,mover_ficha(Estado,Ficha,Lista),Estados),mover_fichas(Estado,T,Te),union(Estados,Te,Resultado).
 
 %Predicado central, inserta una Ficha en un Estado y retorna un NuevoEstado con la Ficha colocada en el primer lugar donde era posible.
 %para ganar eficiencia,trabaja directamente sobre el borde derecho de la grilla, en donde deben entrar todas las fichas.
@@ -202,6 +106,132 @@ recuperar_numero(rojo,4,3).
 recuperar_numero(negro,5,3).
 
 
+
+
+
+%----------------------------------------------------------------
+%Predicados para el uso de Matrices
+%----------------------------------------------------------------
+%Retorna la Nesima fila de una matriz
+fila(M, N, Row) :-
+	nth(N, M, Row).
+
+%Retorna la N-esima columna de una matriz
+columna(M, N, Col) :-
+    transp(M, MT),
+    fila(MT, N, Col).
+
+%Metodo de trasposicion de matrices
+transp([[]|_], []).
+transp([[I|Is]|Rs], [Col|MT]) :-
+    primer_columna([[I|Is]|Rs], Col, [Is|NRs]),
+    transp([Is|NRs], MT).
+
+%Retorna la primer columna de una matriz en una lista
+primer_columna([], [], []).
+primer_columna([[]|_], [], []).
+primer_columna([[I|Is]|Rs], [I|Col], [Is|Rest]) :-
+    primer_columna(Rs, Col, Rest).
+
+%Elimina la primer columna de una matriz y retorna una lista de elementos eliminados.
+quitarColumna([],[],[]).
+quitarColumna([HM|TM],[T|TR],[H|ListaRemovidos]):-
+	HM=[H|T],quitarColumna(TM,TR,ListaRemovidos).
+
+%Elimina de Matriz N columnas de derecha a izquierda.
+quitarNColumnas(Matriz,Matriz,0).
+quitarNColumnas(Matriz,NuevaMatriz,N):-
+	quitarColumna(Matriz,MatrizA,_L),M is N-1,quitarNColumnas(MatrizA,NuevaMatriz,M).
+
+%Agrega una columna al comienzo de una matriz.
+agregarColumna([],[],[]).
+agregarColumna([[H|T]|TM],[Hr|Tr],[[Hr,H|T]|MatrizR]):-
+	agregarColumna(TM,Tr,MatrizR).
+
+%Elimina N columnas de una matriz sin guardar los elementos eliminados. <-Deprecated
+recortarMatriz([],_N,[]).
+recortarMatriz([H|T],N,[NH|MatrizRecortada]):-
+	recortarNLista(H,N,NH),recortarMatriz(T,N,MatrizRecortada).
+
+%------------------------------------------------------------
+%Predicados para el uso de filas
+%------------------------------------------------------------
+
+%Recuperar Lista con las N ultimas posiciones
+recortarNLista(L,M,R):-
+	length(L,N2),
+	N is (N2-M),
+	recortarLista(L,N,R).
+
+
+%Recortar N lugares a la lista
+recortarLista(L,0,L).
+recortarLista([_H|T],N,R):-
+	N2 is N-1,
+	recortarLista(T,N2,R).
+
+%Elimina los elementos duplicados de una lista.
+sinDuplicados([],[]).
+sinDuplicados([0|Xs],Ys):- sinDuplicados(Xs,Ys).
+sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
+sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
+
+
+%---------------------------------------------------------
+%Predicados de fichas
+%---------------------------------------------------------
+
+%insertar figuras para posicion especifica
+azul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
+	insertarFicha(H1,N,1,1,Hn1),
+	insertarFicha(H2,N,2,1,Hn2),
+	insertarFicha(H3,N,3,1,Hn3),
+	insertarFicha(H4,N,2,1,Hn4),
+	insertarFicha(H5,N,1,1,Hn5).
+
+negro(N,[H1,H2|To],[Hn1,Hn2|To]):-
+	N1 is N+2,insertarFicha(H1,N1,1,5,Hn1),
+	insertarFicha(H2,N,3,5,Hn2).
+
+marron(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
+	N1 is N+1,insertarFicha(H1,N1,1,3,Hn1),
+	insertarFicha(H2,N,2,3,Hn2),
+	insertarFicha(H3,N,1,3,Hn3).
+
+rosa(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
+  insertarFicha(H1,N,5,2,Hn1),
+  N1 is N+1, insertarFicha(H2,N1,3,2,Hn2),
+  N2 is N+2, insertarFicha(H3,N2,1,2,Hn3).
+  
+rojo(N,[H1,H2|To],[Hn1,Hn2|To]):-
+  N1 is N+1, insertarFicha(H1,N1,2,4,Hn1),
+  insertarFicha(H2,N,2,4,Hn2).
+
+%Dada una fila,un desplazamiento N,una cantidad de piezas M,un numero-ficha F, TRUE: retorna una fila con la
+%ficha insertada en ella.
+insertarFicha([],0,0,_F,[]).
+insertarFicha([H|T],0,0,_F,[H|T]).
+insertarFicha([0|T],0,M,F,[F|Tn]):-
+	M1 is M-1,insertarFicha(T,0,M1,F,Tn).
+insertarFicha([],_,_,_,_):-false.
+insertarFicha([H|T],N,M,F,[H|Tn]):-
+	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
+
+%----------------------------------------------------
+%Estado inicial
+%----------------------------------------------------
+matriz([[0,0,0,0,0,0,0,1,0,0,0,0,0],
+	[0,0,0,0,0,0,0,1,1,0,0,0,0],
+	[0,3,2,2,2,2,2,1,1,1,0,0,0],
+	[3,3,0,2,2,2,0,1,1,4,4,0,5],
+	[3,0,0,0,2,0,0,1,4,4,5,5,5]]).
+
+
+matrizGround([[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+	      [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+	      [0,3,2,2,2,2,2,1,1,1,0,0,0,0,0,0],
+	      [3,3,0,2,2,2,0,1,1,0,0,0,4,4,0,5],
+	      [3,0,0,0,2,0,0,1,0,0,0,4,4,5,5,5]]).
 
 
 %-------------------------------------DEPRECATED----------------------------------------------------------------------------
