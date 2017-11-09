@@ -1,6 +1,5 @@
 :- module(h,_,_).
 :- use_module(library(lists)).
-:- use_module(library(system_extra)).
 :- use_package(hiord).
 :- use_module(library(idlists)).
 :- use_module(library(aggregates)).
@@ -12,7 +11,7 @@
 
 %Calcula todos los posibles estados desde Estado para colocar las piezas faltantes
 neighbours(Estado,NuevosEstados):-
-	is_goal(F),comprobarMatriz(Estado,F,Fichas),mover_fichas(Estado,Fichas,NuevosEstados).
+	listaFichas(Estado,Fichas),mover_fichas(Estado,Fichas,NuevosEstados).
 	
 % is_goal(N) is true if N is a goal node.
 is_goal([[1,2,2,2,2,2],
@@ -29,19 +28,44 @@ cost(N,M,C) :-
    C is 1.
 
 % h(N,C) is true if C is the heuristic cost of node N
-%  This assumes that there is only one goal node.
+%  Para este problema resumido, se considera un unico estado final descripto en el enunciado
+%  y se orienta toda la resolucion a ese estado para que sea computable y comprobable que funciona.
 h(N,C) :-
    is_goal(G),
    comprobar(N,G,C).
 
 %Correccion sintactica.
-init(M):-matriz(M).
+init(M):-matrizI(M).
 
 
+%----------------------------------------------------
+%Estado inicial
+%----------------------------------------------------
+%Se considera la grilla de tamano fijo 6, no como en el enunciado.
+matrizI([[1,0,0,0,0,0],
+	 [1,1,0,0,0,0],
+	 [1,1,1,0,0,0],
+	 [1,1,4,4,0,5],
+	 [1,4,4,5,5,5]]).
+
+%Lista de fichas sin acomodar en el estado init
+listaFichasI([2,3]).
+
+%Lista de fichas no insertadas
+listaFichas(Estado,Lista):-
+	listaFichasI(ListaI),
+	nth(1,Estado,F1),subtract(ListaI,F1,R1),
+	nth(2,Estado,F2),subtract(R1,F2,R2),
+	nth(3,Estado,F3),subtract(R2,F3,R3),
+	nth(4,Estado,F4),subtract(R3,F4,R4),
+	nth(5,Estado,F5),subtract(R4,F5,R5),
+	nth(6,Estado,F6),subtract(R5,F6,Lista).
 
 %--------------------------------------------------------------------------------
 %Predicados propios del dominio: Manejo de Fichas y recorridos de incersion
 %--------------------------------------------------------------------------------
+
+
 
 %Retorna la cantidad de fichas que no estan o estan fuera de lugar entre dos filas.
 fichasDesacomodadasFila(F1,F2,N):-
@@ -63,29 +87,25 @@ comprobarMatriz([H1|T1],[H2|T2],Resultado):-
 
 %Comprueba fichas fuera de lugar por fila, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
 comprobarFilas(F1,F2,R):-
-	length(F2,N),
-	recortarNLista(F1,N,FR),
-	subtract(F2,FR,R).
+	%length(F2,N),
+	%recortarNLista(F1,N,FR),
+	subtract(F2,F1,R).
 
 %Dado un estado Estado y una lista Fichas, genera un listado de NuevosEstados con todas las Fichas insertadas 
 mover_fichas(_,[],[]).
 mover_fichas(Estado,[H|T],Resultado):-
 	recuperar_numero(Ficha,H,_),findall(Lista,mover_ficha(Estado,Ficha,Lista),Estados),mover_fichas(Estado,T,Te),union(Estados,Te,Resultado).
 
-%Predicado central, inserta una Ficha en un Estado y retorna un NuevoEstado con la Ficha colocada en el primer lugar donde era posible.
-%para ganar eficiencia,trabaja directamente sobre el borde derecho de la grilla, en donde deben entrar todas las fichas.
+mover_ficha(Estado,Ficha,NuevoEstado):- posicion_valida(0,Estado,Ficha,NuevoEstado).
 
-mover_ficha(Estado,Ficha,NuevoEstado):-
-	recuperar_numero(Ficha,Numero,Long),remover_ficha(Estado,Numero,EstadoIntermedio),quitarNColumnas(EstadoIntermedio,[Hg|Tg],Long),length(Hg,Tope),N is Tope-6,posicion_valida(N,Tope,[Hg|Tg],Ficha,NuevoEstado).
+posicion_valida(6,_,_,_):- false.
+posicion_valida(N,[H|Matriz],Ficha,EstadoNuevo):-fila_valida(N,[H|Matriz],Ficha,EstadoNuevo).
+posicion_valida(N,Matriz,Ficha,EstadoNuevo):- N1 is N+1,N1<6,posicion_valida(N1,Matriz,Ficha,EstadoNuevo).
 
-%Busca una posicion valida para insertar la ficha, recorriendo por columnas
-posicion_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo):-fila_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo).
-posicion_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- N1 is N+1,Tope>=N1,posicion_valida(N1,Tope,Matriz,Ficha,EstadoNuevo).
+fila_valida(_,[],_,_):-false.
+fila_valida(N,[H|Matriz],Ficha,EstadoNuevo):- call(Ficha,N,[H|Matriz],EstadoNuevo).
+fila_valida(N,[X|Fila],Ficha,[X|EstadoNuevo]):- fila_valida(N,Fila,Ficha,EstadoNuevo).
 
-%Busca una posicion valida para insertar la ficha, recorriendo por filas y fallando si no es posible
-fila_valida(_,_,[],_,_):-false.
-fila_valida(N,_Tope,[H|Matriz],Ficha,EstadoNuevo):- call(Ficha,N,[H|Matriz],EstadoNuevo).
-fila_valida(N,Tope,[X|Fila],Ficha,[X|EstadoNuevo]):- fila_valida(N,Tope,Fila,Ficha,EstadoNuevo).
 
 %Elimina la ocurrencia de la Ficha en un Estado.
 remover_ficha([],_Ficha,[]).
@@ -104,9 +124,6 @@ recuperar_numero(rosa,2,5).
 recuperar_numero(marron,3,2).
 recuperar_numero(rojo,4,3).
 recuperar_numero(negro,5,3).
-
-
-
 
 
 %----------------------------------------------------------------
@@ -217,22 +234,6 @@ insertarFicha([],_,_,_,_):-false.
 insertarFicha([H|T],N,M,F,[H|Tn]):-
 	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
 
-%----------------------------------------------------
-%Estado inicial
-%----------------------------------------------------
-matriz([[0,0,0,0,0,0,0,1,0,0,0,0,0],
-	[0,0,0,0,0,0,0,1,1,0,0,0,0],
-	[0,3,2,2,2,2,2,1,1,1,0,0,0],
-	[3,3,0,2,2,2,0,1,1,4,4,0,5],
-	[3,0,0,0,2,0,0,1,4,4,5,5,5]]).
-
-
-matrizGround([[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
-	      [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
-	      [0,3,2,2,2,2,2,1,1,1,0,0,0,0,0,0],
-	      [3,3,0,2,2,2,0,1,1,0,0,0,4,4,0,5],
-	      [3,0,0,0,2,0,0,1,0,0,0,4,4,5,5,5]]).
-
 
 %-------------------------------------DEPRECATED----------------------------------------------------------------------------
 
@@ -283,6 +284,26 @@ matrizGround([[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
 %hacerGround([H1|T1],[0|R]):-
 %	var(H1),hacerGround(T1,R).
 
+
+%Busca una posicion valida para insertar la ficha, recorriendo por columnas
+%posicion_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo):-fila_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo).
+%posicion_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- N1 is N+1,Tope>=N1,posicion_valida(N1,Tope,Matriz,Ficha,EstadoNuevo).
+
+%Busca una posicion valida para insertar la ficha, recorriendo por filas y fallando si no es posible
+%fila_valida(_,_,[],_,_):-false.
+%fila_valida(N,_Tope,[H|Matriz],Ficha,EstadoNuevo):- call(Ficha,N,[H|Matriz],EstadoNuevo).
+%fila_valida(N,Tope,[X|Fila],Ficha,[X|EstadoNuevo]):- fila_valida(N,Tope,Fila,Ficha,EstadoNuevo).
+
+
+%Predicado central, inserta una Ficha en un Estado y retorna un NuevoEstado con la Ficha colocada en el primer lugar donde era posible.
+%para ganar eficiencia,trabaja directamente sobre el borde derecho de la grilla, en donde deben entrar todas las fichas.
+
+%mover_ficha(Estado,Ficha,NuevoEstado):-
+%	recuperar_numero(Ficha,Numero,Long),remover_ficha(Estado,Numero,EstadoIntermedio),quitarNColumnas(EstadoIntermedio,[Hg|Tg],Long),length(Hg,Tope),N is Tope-6,posicion_valida(N,Tope,[Hg|Tg],Ficha,NuevoEstado).
+
+%neighbours(Estado,NuevosEstados):-
+%	is_goal(F),comprobarMatriz(Estado,F,Fichas),mover_fichas(Estado,Fichas,NuevosEstados).
+
 %Figuras o Tans del Juego para posicion generica
 % listaFiguras(azul,rosa,marron,rojo,negro).
 % 	%triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
@@ -309,9 +330,13 @@ matrizGround([[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
 
 
 %PRUEBAS Reducidas
-matrizP([[2,_,_],[_,_,_],[_,_,_],[_,_,_]]).
+%matrizP([[2,_,_],[_,_,_],[_,_,_],[_,_,_]]).
+%ficha1([[1,_],[1,_],[1,1]]).
+%ficha2([[1,_],[1,_],[1,1],[1,1]]).
+%matriz6([[2,0,0,0,0,0],[2,2,0,0,0,0],[2,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]]).
 
-ficha1([[1,_],[1,_],[1,1]]).
-ficha2([[1,_],[1,_],[1,1],[1,1]]).
-
-matriz6([[2,0,0,0,0,0],[2,2,0,0,0,0],[2,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]]).
+%matriz([[0,0,0,0,0,0,0,1,0,0,0,0,0],
+%	[0,0,0,0,0,0,0,1,1,0,0,0,0],
+%	[0,3,2,2,2,2,2,1,1,1,0,0,0],
+%	[3,3,0,2,2,2,0,1,1,4,4,0,5],
+%	[3,0,0,0,2,0,0,1,4,4,5,5,5]]).
