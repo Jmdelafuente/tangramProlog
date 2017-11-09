@@ -5,51 +5,9 @@
 :- use_module(library(idlists)).
 %:- use_module(library(random)).
 
-%neighbours(o103,[ts,l2d3,o109]).
-%neighbours(ts,[mail]).
-%neighbours(mail,[]).
-%neighbours(o109,[o111,o119]).
-%neighbours(o111,[]).
-%neighbours(o119,[storage,o123]).
-%neighbours(storage,[]).
-%neighbours(o123,[r123,o125]).
-%neighbours(o125,[]).
-%neighbours(l2d1,[l3d2,l2d2]).
-%neighbours(l2d2,[l2d4]).
-%neighbours(l2d3,[l2d1,l2d4]).
-%neighbours(l2d4,[o109]).
-%neighbours(l3d2,[l3d3,l3d1]).
-%neighbours(l3d1,[l3d3]).
-%neighbours(l3d3,[]).
-%neighbours(r123,[]).
-
-%neighbours(Estado,NuevosEstados):-
-%	is_goal(F),comprobarMatriz(Estado,F,[NroFicha|_T]),recuperar_numero(Ficha,NroFicha,_),display(NroFicha),mover_fichas(Estado,Ficha,NuevoEstado).
+%Calcula todos los posibles estados desde Estado para colocar las piezas faltantes
 neighbours(Estado,NuevosEstados):-
 	is_goal(F),comprobarMatriz(Estado,F,Fichas),mover_fichas(Estado,Fichas,NuevosEstados).
-
-%elegir una ficha de las faltantes para colocar
-%chooseOne([], []).
-%chooseOne(Lista, Ficha) :-
-%        length(Lista, Length),
-%        random(0, Length, Index),
-%        nth(Index, Lista, Ficha).
-
-%nodos
-%nodo(N,_,_,_).
-%nodo(Matriz,[],0,C):-
-%	matriz(Matriz),
-%	h(Matriz,C).
-
-%nodo(Estado,P,1,C):-
-%	mover_ficha(M,P,R),
-%	h(R,C).
-
-
-%nodo(N,[P|N],PC,C):-
-%	moverFicha(N,,R),
-	
-%nodo([H|T],P,PC,C):-
 	
 % is_goal(N) is true if N is a goal node.
 is_goal([[1,2,2,2,2,2],
@@ -126,29 +84,6 @@ sinDuplicados([0|Xs],Ys):- sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
 
-%Figuras o Tans del Juego para posicion generica
-% listaFiguras(azul,rosa,marron,rojo,negro).
-% 	%triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
-
-% triangulo1([[1],
-%  	    [1,1],
-% 	    [1,1,1],
-% 	    [1,1],
-% 	    [1]]).
-
-% triangulo2([[2,2,2,2,2],
-% 	    [_,2,2,2],
-% 	    [_,_,2]]).
-
-% zeta3([[_,3],
-%        [3,3],
-%        [3]]).
-
-% zeta4([[_,4,4],
-%        [4,4]]).
-
-% ele5([[_,_,5],
-%           [5,5,5]]).
 
 %insertar figuras para posicion especifica
 azul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
@@ -176,7 +111,6 @@ rojo(N,[H1,H2|To],[Hn1,Hn2|To]):-
   N1 is N+1, insertarFicha(H1,N1,2,4,Hn1),
   insertarFicha(H2,N,2,4,Hn2).
 
-%insertarFicha(_,-1,_,_,_):-!.
 insertarFicha([],0,0,_F,[]).
 insertarFicha([H|T],0,0,_F,[H|T]).
 insertarFicha([0|T],0,M,F,[F|Tn]):-
@@ -185,7 +119,7 @@ insertarFicha([],_,_,_,_):-false.
 insertarFicha([H|T],N,M,F,[H|Tn]):-
 	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
 
- %Estado inicial
+%Estado inicial
 
 matriz([[0,0,0,0,0,0,0,1,0,0,0,0,0],
 	[0,0,0,0,0,0,0,1,1,0,0,0,0],
@@ -194,14 +128,17 @@ matriz([[0,0,0,0,0,0,0,1,0,0,0,0,0],
 	[3,0,0,0,2,0,0,1,4,4,5,5,5]]).
 
 
+
 matrizGround([[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
 	      [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
 	      [0,3,2,2,2,2,2,1,1,1,0,0,0,0,0,0],
 	      [3,3,0,2,2,2,0,1,1,0,0,0,4,4,0,5],
 	      [3,0,0,0,2,0,0,1,0,0,0,4,4,5,5,5]]).
 
-
+%--------------------------------------------------------------------------------
 %Predicados propios del dominio: Manejo de Fichas y recorridos de incersion
+%--------------------------------------------------------------------------------
+
 %Retorna la cantidad de fichas que no estan o estan fuera de lugar entre dos filas.
 fichasDesacomodadasFila(F1,F2,N):-
 	comprobarFilas(F1,F2,R),
@@ -213,66 +150,76 @@ comprobar(Matriz,MatrizFinal,Heuristica):-
 	length(Resultado,Heuristica).
 
 %Buscar fichas desacomodadas, devuelve lista con los numeros de fichas fuera de lugar, no la cantidad.
+%util para corroborar los numeros de las fichas que faltan acomodar.
+
 comprobarMatriz(_M1,[],[]).
 comprobarMatriz([H1|T1],[H2|T2],Resultado):-
 	comprobarFilas(H1,H2,Rt),comprobarMatriz(T1,T2,R),union(Rt,R,Res),sinDuplicados(Res,Resultado).
 
-%Comprueba fichas fuera de lugar, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
+
+%Comprueba fichas fuera de lugar por fila, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
 comprobarFilas(F1,F2,R):-
 	length(F2,N),
-	%hacerGround(F1,FR1),
 	recortarNLista(F1,N,FR),
-	%diferentes(FR,F2,R).
 	subtract(F2,FR,R).
-%Predicados de Unificacion para variables anonimas y lugares libres
-%hacerGround([],[]).
-%hacerGround([H1|T1],[H1|R]):-
-%	nonvar(H1),hacerGround(T1,R).
-%hacerGround([H1|T1],[0|R]):-
-%	var(H1),hacerGround(T1,R).
 
-
-%deshacerGround([],[]).
-%deshacerGround([0|T1],[_|R]):-
-%	deshacerGround(T1,R).
-%deshacerGround([H1|T1],[H1|R]):-
-%	deshacerGround(T1,R).
-
-
-%mover_ficha(Estado,[HFicha|TFicha],NuevoEstado):-
-%	recuperar_numero([HFicha|TFicha],Numero),remover_ficha(Estado,Numero,EstadoIntermedio),length(HFicha,N),quitarNColumnas(EstadoIntermedio,Gri%lla,N),posicion_valida(Grilla,[HFicha|TFicha],NuevoEstado).
-
+%Dado un estado Estado y una lista Fichas, genera un listado de NuevosEstados con todas las Fichas insertadas 
 mover_fichas(_,[],[]).
 mover_fichas(Estado,[H|T],[He|Te]):-
 	recuperar_numero(Ficha,H,_),mover_ficha(Estado,Ficha,He),mover_fichas(Estado,T,Te).
 
+%Predicado central, inserta una Ficha en un Estado y retorna un NuevoEstado con la Ficha colocada en el primer lugar donde era posible.
+%para ganar eficiencia,trabaja directamente sobre el borde derecho de la grilla, en donde deben entrar todas las fichas.
+
 mover_ficha(Estado,Ficha,NuevoEstado):-
 	recuperar_numero(Ficha,Numero,Long),remover_ficha(Estado,Numero,EstadoIntermedio),quitarNColumnas(EstadoIntermedio,[Hg|Tg],Long),length(Hg,Tope),N is Tope-6,posicion_valida(N,Tope,[Hg|Tg],Ficha,NuevoEstado).
 
-%Ajuste de eficiencia
-%posicion_valida(Tope,Tope,_,_,_):-false.
+%Busca una posicion valida para insertar la ficha, recorriendo por columnas
 posicion_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo):-fila_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo).
 posicion_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- N1 is N+1,Tope>=N1,posicion_valida(N1,Tope,Matriz,Ficha,EstadoNuevo).
-%posicion_valida(N,Tope,[X|Fila],Ficha,[X|EstadoNuevo]):- posicion_valida(N,Tope,Fila,Ficha,EstadoNuevo).
 
+%Busca una posicion valida para insertar la ficha, recorriendo por filas y fallando si no es posible
 fila_valida(_,_,[],_,_):-false.
 fila_valida(N,_Tope,[H|Matriz],Ficha,EstadoNuevo):- call(Ficha,N,[H|Matriz],EstadoNuevo).
 fila_valida(N,Tope,[X|Fila],Ficha,[X|EstadoNuevo]):- fila_valida(N,Tope,Fila,Ficha,EstadoNuevo).
 
-
+%Elimina la ocurrencia de la Ficha en un Estado.
 remover_ficha([],_Ficha,[]).
 remover_ficha([Fila|Tm],Numero,[NFila|EstadoParcial]):-
 	remover_fila(Fila,Numero,NFila),remover_ficha(Tm,Numero,EstadoParcial).
 
+%Elimina la ocurrencia de la Ficha en una fila recursivamente.
 remover_fila([],_Ficha,[]).
 remover_fila([Ficha|T],Ficha,[0|NFila]):-remover_fila(T,Ficha,NFila).
 remover_fila([H|T],Ficha,[H|NFila]):-remover_fila(T,Ficha,NFila).
 
+%Predicado reversible para obtener todos los datos de una ficha
+%recuperar_numero(nombre,numero,anchoEnColumnas).
 recuperar_numero(azul,1,3).
 recuperar_numero(rosa,2,5).
 recuperar_numero(marron,3,2).
 recuperar_numero(rojo,4,3).
 recuperar_numero(negro,5,3).
+
+
+
+
+%-------------------------------------DEPRECATED----------------------------------------------------------------------------
+
+%elegir una ficha de las faltantes para colocar
+%chooseOne([], []).
+%chooseOne(Lista, Ficha) :-
+%        length(Lista, Length),
+%        random(0, Length, Index),
+%        nth(Index, Lista, Ficha).
+
+%Comprueba de forma ordenada si las listas difieren y retorna los elementos de F2 que no están o están fuera de orden en F1.
+%diferentes([],[],[]).
+%diferentes([H1|T1],[H1|T2],R):-
+%	diferentes(T1,T2,R).
+%diferentes([_H1|T1],[H2|T2],[H2|R]):-
+%	diferentes(T1,T2,R).
+
 
 %recuperar_numero([],0).
 %recuperar_numero([[HFicha|_T]|_TFicha],HFicha):-nonvar(HFicha).
@@ -288,12 +235,47 @@ recuperar_numero(negro,5,3).
 %insertar_fila([0|Lista],[Xf|ListaF],[Xf|Mn]):- insertar_fila(Lista,ListaF,Mn).
 
 
-%Comprueba de forma ordenada si las listas difieren y retorna los elementos de F2 que no están o están fuera de orden en F1.
-diferentes([],[],[]).
-diferentes([H1|T1],[H1|T2],R):-
-	diferentes(T1,T2,R).
-diferentes([_H1|T1],[H2|T2],[H2|R]):-
-	diferentes(T1,T2,R).
+
+%deshacerGround([],[]).
+%deshacerGround([0|T1],[_|R]):-
+%	deshacerGround(T1,R).
+%deshacerGround([H1|T1],[H1|R]):-
+%	deshacerGround(T1,R).
+
+
+%mover_ficha(Estado,[HFicha|TFicha],NuevoEstado):-
+%	recuperar_numero([HFicha|TFicha],Numero),remover_ficha(Estado,Numero,EstadoIntermedio),length(HFicha,N),quitarNColumnas(EstadoIntermedio,Gri%lla,N),posicion_valida(Grilla,[HFicha|TFicha],NuevoEstado).
+
+%Predicados de Unificacion para variables anonimas y lugares libres
+%hacerGround([],[]).
+%hacerGround([H1|T1],[H1|R]):-
+%	nonvar(H1),hacerGround(T1,R).
+%hacerGround([H1|T1],[0|R]):-
+%	var(H1),hacerGround(T1,R).
+
+%Figuras o Tans del Juego para posicion generica
+% listaFiguras(azul,rosa,marron,rojo,negro).
+% 	%triangulo1(Azul),triangulo2(Rosa),zeta3(Marron),zeta4(Rojo),ele5(Negro).
+
+% triangulo1([[1],
+%  	    [1,1],
+% 	    [1,1,1],
+% 	    [1,1],
+% 	    [1]]).
+
+% triangulo2([[2,2,2,2,2],
+% 	    [_,2,2,2],
+% 	    [_,_,2]]).
+
+% zeta3([[_,3],
+%        [3,3],
+%        [3]]).
+
+% zeta4([[_,4,4],
+%        [4,4]]).
+
+% ele5([[_,_,5],
+%           [5,5,5]]).
 
 
 %PRUEBAS Reducidas
