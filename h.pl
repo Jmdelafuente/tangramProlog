@@ -2,6 +2,7 @@
 :- use_module(library(lists)).
 :- use_module(library(system_extra)).
 :- use_package(hiord).
+:- use_module(library(idlists)).
 %:- use_module(library(random)).
 
 %neighbours(o103,[ts,l2d3,o109]).
@@ -22,8 +23,10 @@
 %neighbours(l3d3,[]).
 %neighbours(r123,[]).
 
-neighbours(Estado,NuevoEstado):-
-	is_goal(F),comprobarMatriz(Estado,F,[NroFicha|_T]),recuperar_numero(Ficha,NroFicha,_),display(Ficha),mover_ficha(Estado,Ficha,NuevoEstado).
+%neighbours(Estado,NuevosEstados):-
+%	is_goal(F),comprobarMatriz(Estado,F,[NroFicha|_T]),recuperar_numero(Ficha,NroFicha,_),display(NroFicha),mover_fichas(Estado,Ficha,NuevoEstado).
+neighbours(Estado,NuevosEstados):-
+	is_goal(F),comprobarMatriz(Estado,F,Fichas),mover_fichas(Estado,Fichas,NuevosEstados).
 
 %elegir una ficha de las faltantes para colocar
 %chooseOne([], []).
@@ -34,9 +37,9 @@ neighbours(Estado,NuevoEstado):-
 
 %nodos
 %nodo(N,_,_,_).
-nodo(Matriz,[],0,C):-
-	matriz(Matriz),
-	h(Matriz,C).
+%nodo(Matriz,[],0,C):-
+%	matriz(Matriz),
+%	h(Matriz,C).
 
 %nodo(Estado,P,1,C):-
 %	mover_ficha(M,P,R),
@@ -212,16 +215,15 @@ comprobar(Matriz,MatrizFinal,Heuristica):-
 %Buscar fichas desacomodadas, devuelve lista con los numeros de fichas fuera de lugar, no la cantidad.
 comprobarMatriz(_M1,[],[]).
 comprobarMatriz([H1|T1],[H2|T2],Resultado):-
-	comprobarFilas(H1,H2,Rt),comprobarMatriz(T1,T2,R),union(Rt,R,Resultado).
+	comprobarFilas(H1,H2,Rt),comprobarMatriz(T1,T2,R),union(Rt,R,Res),sinDuplicados(Res,Resultado).
 
 %Comprueba fichas fuera de lugar, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
 comprobarFilas(F1,F2,R):-
 	length(F2,N),
 	%hacerGround(F1,FR1),
 	recortarNLista(F1,N,FR),
-	diferentes(FR,F2,Res),
-	sinDuplicados(Res,R).
-
+	%diferentes(FR,F2,R).
+	subtract(F2,FR,R).
 %Predicados de Unificacion para variables anonimas y lugares libres
 %hacerGround([],[]).
 %hacerGround([H1|T1],[H1|R]):-
@@ -240,13 +242,16 @@ comprobarFilas(F1,F2,R):-
 %mover_ficha(Estado,[HFicha|TFicha],NuevoEstado):-
 %	recuperar_numero([HFicha|TFicha],Numero),remover_ficha(Estado,Numero,EstadoIntermedio),length(HFicha,N),quitarNColumnas(EstadoIntermedio,Gri%lla,N),posicion_valida(Grilla,[HFicha|TFicha],NuevoEstado).
 
+mover_fichas(_,[],[]).
+mover_fichas(Estado,[H|T],[He|Te]):-
+	recuperar_numero(Ficha,H,_),mover_ficha(Estado,Ficha,He),mover_fichas(Estado,T,Te).
+
 mover_ficha(Estado,Ficha,NuevoEstado):-
 	recuperar_numero(Ficha,Numero,Long),remover_ficha(Estado,Numero,EstadoIntermedio),quitarNColumnas(EstadoIntermedio,[Hg|Tg],Long),length(Hg,Tope),N is Tope-6,posicion_valida(N,Tope,[Hg|Tg],Ficha,NuevoEstado).
 
 %Ajuste de eficiencia
 %posicion_valida(Tope,Tope,_,_,_):-false.
 posicion_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo):-fila_valida(N,Tope,[H|Matriz],Ficha,EstadoNuevo).
-%posicion_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- columna_valida(N,Tope,Matriz,Ficha,EstadoNuevo).
 posicion_valida(N,Tope,Matriz,Ficha,EstadoNuevo):- N1 is N+1,Tope>=N1,posicion_valida(N1,Tope,Matriz,Ficha,EstadoNuevo).
 %posicion_valida(N,Tope,[X|Fila],Ficha,[X|EstadoNuevo]):- posicion_valida(N,Tope,Fila,Ficha,EstadoNuevo).
 
