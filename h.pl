@@ -27,18 +27,21 @@ cost(N,M,C) :-
    member(M,NN),
    C is 1.
 
-% h(N,C) is true if C is the heuristic cost of node N
-%  Para este problema resumido, se considera un unico estado final descripto en el enunciado
-%  y se orienta toda la resolucion a ese estado para que sea computable y comprobable que funciona.
+
+% Heuristica aceptable descripta en el informe cómo la primer Heuristica 1.
+% "cantidad de fichas que faltan colocar".
+% Esta heuristica es teoricamente mas correcta ya que se trata de una busqueda ciega -no se conoce el goal-. A pesar de ello se habia utilizado otra heuristica para corroborar en menor tiempo el funcionamiento correcto del programa y el funcionamiento de A*.
+h(N,C) :-
+	listaFichas(N,Fichas),
+	length(Fichas,C).
+
+
+%  Para este problema resumido, se considera un unico estado final descripto en el enunciado y se orienta toda la resolucion a ese estado para que sea computable y comprobable que funciona.
 h2(N,C) :-
    is_goal(G),
    comprobar(N,G,C).
 
-% Heuristica aceptable descripta en el informe cómo la primer Heuristica 1.
-% "cantidad de fichas que faltan colocar".
-h(N,C) :-
-	listaFichas(N,Fichas),
-	length(Fichas,C).
+
 
 
 %Correccion sintactica.
