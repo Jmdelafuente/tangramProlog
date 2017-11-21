@@ -30,9 +30,16 @@ cost(N,M,C) :-
 % h(N,C) is true if C is the heuristic cost of node N
 %  Para este problema resumido, se considera un unico estado final descripto en el enunciado
 %  y se orienta toda la resolucion a ese estado para que sea computable y comprobable que funciona.
-h(N,C) :-
+h2(N,C) :-
    is_goal(G),
    comprobar(N,G,C).
+
+% Heuristica aceptable descripta en el informe cómo la primer Heuristica 1.
+% "cantidad de fichas que faltan colocar".
+h(N,C) :-
+	listaFichas(N,Fichas),
+	length(Fichas,C).
+
 
 %Correccion sintactica.
 init(M):-matrizI(M).
@@ -58,8 +65,7 @@ listaFichas(Estado,Lista):-
 	nth(2,Estado,F2),subtract(R1,F2,R2),
 	nth(3,Estado,F3),subtract(R2,F3,R3),
 	nth(4,Estado,F4),subtract(R3,F4,R4),
-	nth(5,Estado,F5),subtract(R4,F5,R5),
-	nth(6,Estado,F6),subtract(R5,F6,Lista).
+	nth(5,Estado,F5),subtract(R4,F5,Lista).
 
 %--------------------------------------------------------------------------------
 %Predicados propios del dominio: Manejo de Fichas y recorridos de incersion
