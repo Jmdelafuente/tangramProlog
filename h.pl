@@ -3,7 +3,6 @@
 :- use_package(hiord).
 :- use_module(library(idlists)).
 :- use_module(library(aggregates)).
-%:- use_module(library(random)).
 
 %--------------------------------------------------------------------------------
 %Predicados de Planificacion para asearch1
@@ -28,20 +27,12 @@ cost(N,M,C) :-
    C is 1.
 
 
-% Heuristica aceptable descripta en el informe cómo la primer Heuristica 1.
+% Heuristica aceptable descripta en el informe cómo Heuristica 1.
 % "cantidad de fichas que faltan colocar".
 % Esta heuristica es teoricamente mas correcta ya que se trata de una busqueda ciega -no se conoce el goal-. A pesar de ello se habia utilizado otra heuristica para corroborar en menor tiempo el funcionamiento correcto del programa y el funcionamiento de A*.
 h(N,C) :-
 	listaFichas(N,Fichas),
 	length(Fichas,C).
-
-
-%  Para este problema resumido, se considera un unico estado final descripto en el enunciado y se orienta toda la resolucion a ese estado para que sea computable y comprobable que funciona.
-h2(N,C) :-
-   is_goal(G),
-   comprobar(N,G,C).
-
-
 
 
 %Correccion sintactica.
@@ -74,8 +65,6 @@ listaFichas(Estado,Lista):-
 %Predicados propios del dominio: Manejo de Fichas y recorridos de incersion
 %--------------------------------------------------------------------------------
 
-
-
 %Retorna la cantidad de fichas que no estan o estan fuera de lugar entre dos filas.
 fichasDesacomodadasFila(F1,F2,N):-
 	comprobarFilas(F1,F2,R),
@@ -96,8 +85,6 @@ comprobarMatriz([H1|T1],[H2|T2],Resultado):-
 
 %Comprueba fichas fuera de lugar por fila, F1 es la fila de la matriz actual, F2 la fila de la matriz del estado final.
 comprobarFilas(F1,F2,R):-
-	%length(F2,N),
-	%recortarNLista(F1,N,FR),
 	subtract(F2,F1,R).
 
 %Dado un estado Estado y una lista Fichas, genera un listado de NuevosEstados con todas las Fichas insertadas 
@@ -107,10 +94,13 @@ mover_fichas(Estado,[H|T],Resultado):-
 
 mover_ficha(Estado,Ficha,NuevoEstado):- posicion_valida(0,Estado,Ficha,NuevoEstado).
 
+%Dada una columna N, un Estado, una Ficha, true si NuevoEstado es Estado con Ficha colocada a partir de la columna N
+
 posicion_valida(6,_,_,_):- false.
 posicion_valida(N,[H|Matriz],Ficha,EstadoNuevo):-fila_valida(N,[H|Matriz],Ficha,EstadoNuevo).
 posicion_valida(N,Matriz,Ficha,EstadoNuevo):- N1 is N+1,N1<6,posicion_valida(N1,Matriz,Ficha,EstadoNuevo).
 
+%True si en la columna N de la Fila que encabeza el Estado se puede insertar la Ficha, sin alterar el resto de la fila
 fila_valida(_,[],_,_):-false.
 fila_valida(N,[H|Matriz],Ficha,EstadoNuevo):- call(Ficha,N,[H|Matriz],EstadoNuevo).
 fila_valida(N,[X|Fila],Ficha,[X|EstadoNuevo]):- fila_valida(N,Fila,Ficha,EstadoNuevo).
@@ -133,6 +123,50 @@ recuperar_numero(rosa,2,5).
 recuperar_numero(marron,3,2).
 recuperar_numero(rojo,4,3).
 recuperar_numero(negro,5,3).
+
+
+%---------------------------------------------------------
+%Predicados de fichas
+%---------------------------------------------------------
+
+%insertar figuras para posicion especifica
+azul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
+	insertarFicha(H1,N,1,1,Hn1),
+	insertarFicha(H2,N,2,1,Hn2),
+	insertarFicha(H3,N,3,1,Hn3),
+	insertarFicha(H4,N,2,1,Hn4),
+	insertarFicha(H5,N,1,1,Hn5).
+
+negro(N,[H1,H2|To],[Hn1,Hn2|To]):-
+	N1 is N+2,insertarFicha(H1,N1,1,5,Hn1),
+	insertarFicha(H2,N,3,5,Hn2).
+
+marron(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
+	N1 is N+1,insertarFicha(H1,N1,1,3,Hn1),
+	insertarFicha(H2,N,2,3,Hn2),
+	insertarFicha(H3,N,1,3,Hn3).
+
+rosa(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
+  insertarFicha(H1,N,5,2,Hn1),
+  N1 is N+1, insertarFicha(H2,N1,3,2,Hn2),
+  N2 is N+2, insertarFicha(H3,N2,1,2,Hn3).
+  
+rojo(N,[H1,H2|To],[Hn1,Hn2|To]):-
+  N1 is N+1, insertarFicha(H1,N1,2,4,Hn1),
+  insertarFicha(H2,N,2,4,Hn2).
+
+%Dada una fila,un desplazamiento N,una cantidad de piezas M,un numero-ficha F, TRUE: retorna una fila con la
+%ficha insertada en ella.
+insertarFicha([],0,0,_F,[]).
+insertarFicha([H|T],0,0,_F,[H|T]).
+insertarFicha([0|T],0,M,F,[F|Tn]):-
+	M1 is M-1,insertarFicha(T,0,M1,F,Tn).
+insertarFicha([],_,_,_,_):-false.
+insertarFicha([H|T],N,M,F,[H|Tn]):-
+	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
+
+
+
 
 
 %----------------------------------------------------------------
@@ -201,48 +235,6 @@ sinDuplicados([],[]).
 sinDuplicados([0|Xs],Ys):- sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],Ys):- member(X,Xs), sinDuplicados(Xs,Ys).
 sinDuplicados([X|Xs],[X|Ys]):-sinDuplicados(Xs,Ys).
-
-
-%---------------------------------------------------------
-%Predicados de fichas
-%---------------------------------------------------------
-
-%insertar figuras para posicion especifica
-azul(N,[H1,H2,H3,H4,H5|To],[Hn1,Hn2,Hn3,Hn4,Hn5|To]):-
-	insertarFicha(H1,N,1,1,Hn1),
-	insertarFicha(H2,N,2,1,Hn2),
-	insertarFicha(H3,N,3,1,Hn3),
-	insertarFicha(H4,N,2,1,Hn4),
-	insertarFicha(H5,N,1,1,Hn5).
-
-negro(N,[H1,H2|To],[Hn1,Hn2|To]):-
-	N1 is N+2,insertarFicha(H1,N1,1,5,Hn1),
-	insertarFicha(H2,N,3,5,Hn2).
-
-marron(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
-	N1 is N+1,insertarFicha(H1,N1,1,3,Hn1),
-	insertarFicha(H2,N,2,3,Hn2),
-	insertarFicha(H3,N,1,3,Hn3).
-
-rosa(N,[H1,H2,H3|To],[Hn1,Hn2,Hn3|To]):-
-  insertarFicha(H1,N,5,2,Hn1),
-  N1 is N+1, insertarFicha(H2,N1,3,2,Hn2),
-  N2 is N+2, insertarFicha(H3,N2,1,2,Hn3).
-  
-rojo(N,[H1,H2|To],[Hn1,Hn2|To]):-
-  N1 is N+1, insertarFicha(H1,N1,2,4,Hn1),
-  insertarFicha(H2,N,2,4,Hn2).
-
-%Dada una fila,un desplazamiento N,una cantidad de piezas M,un numero-ficha F, TRUE: retorna una fila con la
-%ficha insertada en ella.
-insertarFicha([],0,0,_F,[]).
-insertarFicha([H|T],0,0,_F,[H|T]).
-insertarFicha([0|T],0,M,F,[F|Tn]):-
-	M1 is M-1,insertarFicha(T,0,M1,F,Tn).
-insertarFicha([],_,_,_,_):-false.
-insertarFicha([H|T],N,M,F,[H|Tn]):-
-	N1 is N-1, N1>=0,insertarFicha(T,N1,M,F,Tn).
-
 
 %-------------------------------------DEPRECATED----------------------------------------------------------------------------
 
@@ -349,3 +341,9 @@ insertarFicha([H|T],N,M,F,[H|Tn]):-
 %	[0,3,2,2,2,2,2,1,1,1,0,0,0],
 %	[3,3,0,2,2,2,0,1,1,4,4,0,5],
 %	[3,0,0,0,2,0,0,1,4,4,5,5,5]]).
+
+
+%  Para este problema resumido, se considera un unico estado final descripto en el enunciado y se orienta toda la resolucion a ese estado para que sea computable y comprobable que funciona. <-DEPRECADO
+h2(N,C) :-
+   is_goal(G),
+   comprobar(N,G,C).
