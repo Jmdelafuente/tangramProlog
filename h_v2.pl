@@ -1,4 +1,4 @@
-:- module(h,_,_).
+:- module(h_v2,_,_).
 :- use_module(library(lists)).
 :- use_package(hiord).
 :- use_module(library(idlists)).
