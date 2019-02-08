@@ -14,5 +14,3 @@ Si se quiere modificar el estado inicial es necesario cambiar el predicado: 'mat
 
 Se pueden generar nuevas fichas añadiendo un predicado que establezca su insercion llamado con el nombre del color de la ficha, añadiendo los valores de la ficha en 'recuperar_ficha' segun lo documentado en los comentarios.
 
-Este mismo codigo puede ser descargado desde GitHub:
-https://github.com/jmdelafuente22/tangramProlog
